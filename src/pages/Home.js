@@ -2,39 +2,23 @@ import React, { useEffect, useState } from 'react'
 import axios from 'axios'
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faArrowUp, faArrowDown } from "@fortawesome/free-solid-svg-icons";
-import VerticalTab from './VerticalTab';
 import { format } from 'date-fns';
-
-
 
 export default function Home() {
   const [expenses, setExpenses] = useState([]);
-  const [selectedTabIndex, setSelectedTabIndex] = useState(0);
+  const [monthlystatement, setMonthlyStatement] = useState([]);
 
   useEffect(() => {
     loadExpenses();
-  }, [selectedTabIndex]);
+  }, []);
 
   const loadExpenses = async () => {
     try {
-
-      const monthNames = [
-        'January 2023',
-        'February 2023',
-        'March 2023',
-        'April 2023',
-        'May 2023',
-        'June 2023',
-        'July 2023',
-        'August 2023',
-        'September 2023',
-      ];
-
-      const selectedMonth = monthNames[selectedTabIndex];
-
-      const result = await axios.get("http://localhost:8080/expensetracker/v1/getData");
+      const result = await axios.get(`http://localhost:8080/expensetracker/api/v1/monthlystatement?month=september&year=2023`);
+      console.log("API response:", result.data.data);
       if (Array.isArray(result.data.data)) {
-        setExpenses(result.data.data);
+        setExpenses(result.data.data[0].data);
+        setMonthlyStatement(result.data.data);
       } else {
         console.error("Invalid API response:", result.data);
       }
@@ -48,14 +32,37 @@ export default function Home() {
     return format(date, 'dd-MMMM-yyyy'); // Format the date as '31-July-2023'
   };
 
-  const handleTabChange = (tabIndex) => {
-    setSelectedTabIndex(tabIndex); // Update the selected tab index
-  };
-
   return (
     <div className="container">
+        <div className="row">
+        
+      
       <div className="py-4">
-      <VerticalTab onChangeTab={handleTabChange} selectedTabIndex={selectedTabIndex} />
+      <table className="table border shadow">
+          <thead>
+            <tr>
+              <th scope="col">Credit <FontAwesomeIcon
+                      icon={faArrowUp}
+                      style={{ color: "green" }} 
+                    /></th>
+              <th scope="col">Debit <FontAwesomeIcon
+                      icon={faArrowDown}
+                      style={{ color: "red" }} 
+                    /></th>
+              <th scope="col">Remaining</th>
+            </tr>
+          </thead>
+          <tbody>
+            {monthlystatement.map((statement, index) => (
+              <tr key={index}>
+                <td>{statement.creditAmount}</td>
+                <td>{statement.debitAmount}</td>
+                <td>{statement.remainingAmount}</td>
+                
+              </tr>
+            ))}
+          </tbody>
+        </table>
         <table className="table border shadow">
           <thead>
             <tr>
@@ -93,6 +100,8 @@ export default function Home() {
           </tbody>
         </table>
       </div>
+    </div>
+  
     </div>
   );
 }
