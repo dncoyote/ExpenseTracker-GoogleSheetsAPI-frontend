@@ -1,0 +1,23 @@
+/* VerticalTabs.css */
+.vertical-tabs {
+    display: flex;
+    flex-direction: column;
+}
+
+.tab {
+    padding: 10px;
+    cursor: pointer;
+    border-left: 4px solid transparent;
+    transition: background-color 0.3s;
+    text-align: left;
+}
+
+.tab:hover {
+    background-color: #f0f0f0;
+}
+
+.tab.active {
+    background-color: #f0f0f0;
+    border-left: 4px solid #007bff;
+    /* Active tab color */
+}

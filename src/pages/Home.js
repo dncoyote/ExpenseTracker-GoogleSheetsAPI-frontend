@@ -3,18 +3,23 @@ import axios from 'axios'
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faArrowUp, faArrowDown } from "@fortawesome/free-solid-svg-icons";
 import { format } from 'date-fns';
+import './VerticalTabs.css';
+import VerticalTabs from './VerticalTabs';
+import HomeBanner from './HomeBanner';
 
 export default function Home() {
   const [expenses, setExpenses] = useState([]);
   const [monthlystatement, setMonthlyStatement] = useState([]);
+  const [selectedMonth, setSelectedMonth] = useState('');
+  const [selectedYear, setSelectedYear] = useState('');
 
   useEffect(() => {
-    loadExpenses();
-  }, []);
+    loadExpenses(selectedMonth, selectedYear);
+  }, [selectedMonth, selectedYear]);
 
-  const loadExpenses = async () => {
+  const loadExpenses = async (month, year) => {
     try {
-      const result = await axios.get(`http://localhost:8080/expensetracker/api/v1/monthlystatement?month=september&year=2023`);
+      const result = await axios.get(`http://localhost:8080/expensetracker/api/v1/monthlystatement?month=${month}&year=${year}`);
       console.log("API response:", result.data.data);
       if (Array.isArray(result.data.data)) {
         setExpenses(result.data.data[0].data);
@@ -35,19 +40,29 @@ export default function Home() {
   return (
     <div className="container">
         <div className="row">
-        
-      
-      <div className="py-4">
+       
+     
+      {/* <div className="py-4"> */}
+      <div className="col-md-3">
+         <VerticalTabs
+            onChange={(month, year) => {
+              setSelectedMonth(month);
+              setSelectedYear(year);
+            }}
+          />
+          </div>
+        <div className="col-md-9">
+          <HomeBanner selectedMonth={selectedMonth} />
       <table className="table border shadow">
           <thead>
             <tr>
               <th scope="col">Credit <FontAwesomeIcon
                       icon={faArrowUp}
-                      style={{ color: "green" }} 
+                      style={{ color: "green" }}
                     /></th>
               <th scope="col">Debit <FontAwesomeIcon
                       icon={faArrowDown}
-                      style={{ color: "red" }} 
+                      style={{ color: "red" }}
                     /></th>
               <th scope="col">Remaining</th>
             </tr>
@@ -58,7 +73,7 @@ export default function Home() {
                 <td>{statement.creditAmount}</td>
                 <td>{statement.debitAmount}</td>
                 <td>{statement.remainingAmount}</td>
-                
+               
               </tr>
             ))}
           </tbody>
@@ -83,12 +98,12 @@ export default function Home() {
                   {expense.type === "DEBIT" ? (
                     <FontAwesomeIcon
                       icon={faArrowDown}
-                      style={{ color: "red" }} 
+                      style={{ color: "red" }}
                     />
                   ) : (
                     <FontAwesomeIcon
                       icon={faArrowUp}
-                      style={{ color: "green" }} 
+                      style={{ color: "green" }}
                     />
                   )}
                 </td>
@@ -101,7 +116,7 @@ export default function Home() {
         </table>
       </div>
     </div>
-  
+ 
     </div>
   );
 }
