@@ -6,43 +6,59 @@ import { format } from 'date-fns';
 import './VerticalTabs.css';
 import VerticalTabs from './VerticalTabs';
 import HomeBanner from './HomeBanner';
+import { css } from "@emotion/react";
+import { SyncLoader } from "react-spinners";
 
 export default function Home() {
   const [expenses, setExpenses] = useState([]);
   const [monthlystatement, setMonthlyStatement] = useState([]);
   const [selectedMonth, setSelectedMonth] = useState('');
   const [selectedYear, setSelectedYear] = useState('');
+  const [showTables, setShowTables] = useState(true);
+  const [isLoading, setIsLoading] = useState(false);
+
+  const override = css`
+  display: block;
+  margin: 0 auto;
+  border-color: red;
+`;
 
   useEffect(() => {
+    setIsLoading(true);
     loadExpenses(selectedMonth, selectedYear);
   }, [selectedMonth, selectedYear]);
 
   const loadExpenses = async (month, year) => {
     try {
       const result = await axios.get(`http://localhost:8080/expensetracker/api/v1/monthlystatement?month=${month}&year=${year}`);
+      console.log("Status response:", result.status);
       console.log("API response:", result.data.data);
       if (Array.isArray(result.data.data)) {
         setExpenses(result.data.data[0].data);
         setMonthlyStatement(result.data.data);
+        setShowTables(true);
       } else {
         console.error("Invalid API response:", result.data);
       }
     } catch (error) {
-      console.error("Error loading expenses:", error);
+      if (error.response && error.response.status === 400) {
+        setShowTables(false);
+      } else {
+        console.error('Error loading expenses:', error);
+      }
+    }finally{
+      setIsLoading(false);
     }
   };
 
   const formatDate = (dateString) => {
     const date = new Date(dateString);
-    return format(date, 'dd-MMMM-yyyy'); // Format the date as '31-July-2023'
+    return format(date, 'dd-MMMM-yyyy');
   };
 
   return (
     <div className="container">
         <div className="row">
-       
-     
-      {/* <div className="py-4"> */}
       <div className="col-md-3">
          <VerticalTabs
             onChange={(month, year) => {
@@ -53,6 +69,18 @@ export default function Home() {
           </div>
         <div className="col-md-9">
           <HomeBanner selectedMonth={selectedMonth} />
+          {isLoading ? ( // Display loading indicator
+            // <div>Loading...</div>
+            <div className="spinner-container">
+            <SyncLoader
+              css={override}
+              size={10} // Adjust the size as needed
+              color={"#36D7B7"} // Set the color of the spinner
+            />
+          </div>
+) : showTables ? ( // Conditionally render tables or message
+            <>
+
       <table className="table border shadow">
           <thead>
             <tr>
@@ -70,9 +98,9 @@ export default function Home() {
           <tbody>
             {monthlystatement.map((statement, index) => (
               <tr key={index}>
-                <td>{statement.creditAmount}</td>
-                <td>{statement.debitAmount}</td>
-                <td>{statement.remainingAmount}</td>
+                <td>₹{statement.creditAmount}</td>
+                <td>₹{statement.debitAmount}</td>
+                <td>₹{statement.remainingAmount}</td>
                
               </tr>
             ))}
@@ -107,13 +135,19 @@ export default function Home() {
                     />
                   )}
                 </td>
-                <td>{expense.amount}</td>
+                <td>₹{expense.amount}</td>
                 <td>{expense.description}</td>
                 <td>{formatDate(expense.date)}</td>
               </tr>
             ))}
           </tbody>
         </table>
+        </>
+          ) : (
+            <div className="alert alert-danger" role="alert">
+              No Data Available
+            </div>
+          )}
       </div>
     </div>
  
